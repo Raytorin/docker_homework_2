@@ -1,0 +1,55 @@
+version: '3.9'
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  pgdata:
+  static_data:
+
+services:
+  web:
+    build: .
+    volumes:
+      - static_data:/new_project/static
+    networks:
+      - backend
+      - frontend
+    depends_on:
+      - postgredb
+
+  postgredb:
+    image: 'postgres:12'
+    environment:
+      POSTGRES_DB: 'netology_docker_compose'
+      POSTGRES_USER: 'postgres'
+      POSTGRES_PASSWORD: 'postgres_pwd'
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d netology_docker_compose"]
+      interval: 20s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    ports:
+      - '8000:8000'
+    networks:
+      - backend
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+      - pgdata:/var/lib/postgresql/data
+      - ./logs:/var/log
+
+  nginx:
+    image: 'nginx'
+    ports:
+      - '8080:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf:ro
+      - static_data:/var/www/html/static
+    networks:
+      - frontend
+    depends_on:
+      - postgredb
+      - web
