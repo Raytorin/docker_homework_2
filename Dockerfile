@@ -15,4 +15,4 @@ EXPOSE 8000
 CMD python manage.py collectstatic --noinput && \
     python manage.py makemigrations && \
     python manage.py migrate --run-syncdb && \
-    gunicorn stocks_products.wsgi -b 0.0.0.0:8000
+    gunicorn stocks_products.wsgi:application --bind 0.0.0.0:8000
